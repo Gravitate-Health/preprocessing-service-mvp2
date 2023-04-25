@@ -1,0 +1,28 @@
+openapi: "3.0.1"
+info:
+  title: Gravitate Health Preprocessing Service API Interface
+  version: MVP2
+  description: Gravitate Health Preprocessing Service. Preprocesses an ePI.
+  contact: {}
+servers:
+  - url: https://fosps.gravitatehealth.eu
+paths:
+  /preprocess:
+    post:
+      tags:
+        - Preprocess
+      description: Preprocesses an ePI. Receives an ePI and returns it preprocessed.
+      requestBody:
+        description: ePI to preprocess.
+        content:
+            application/json:
+              schema:
+                type: object
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+
