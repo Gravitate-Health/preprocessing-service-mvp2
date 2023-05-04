@@ -8,6 +8,7 @@
 - [Gravitate Health Preprocessing service test](#gravitate-health-preprocessing-service-test)
   - [Table of contents](#table-of-contents)
   - [Introduction](#introduction)
+  - [Hackaton Considerations](#hackaton-considerations)
   - [Kubernetes Deployment](#kubernetes-deployment)
   - [Usage](#usage)
   - [Known issues and limitations](#known-issues-and-limitations)
@@ -23,6 +24,19 @@
 This repository contains an example of a preprocesing service.
 
 This service does not need to be published to the internet, so no gateway config is needed to proxy any petition. This is an internal service.
+
+---
+## Hackaton Considerations
+This repository serves as an example of a preprocessor service. It is written in typescript and executes an example semantic annotation.
+In this example, the preprocessing is done in the `src/controllers/preprocessing.ts` file, in the `preprocess` function.
+
+The hackathon participants may write the preprocessor in the way that best suits for them. The only thing that is mandatory is that the preprocessor API complies with the [OpenApi Specification](./openapi.yaml) within this repository.
+
+Participants must fork this proyect into their personal github account. 
+
+The way the preprocessor is deployed is via a docker image. The current Github Workflow named `docker-image` builds an image with the syntax `ghcr.io/GITHUB_USERNAME/REPOSITORY_NAME`, and publishes it to the repository. The name of this image must be provided to the Hackaton organizers so they can deploy a service running the developed preprocessing service to be tested within the infrastructure.
+
+The name of the preprocessor will be presented in the Hackathon frontend as team-N_preprocessor
 
 ---
 ## Kubernetes Deployment
