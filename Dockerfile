@@ -1,4 +1,4 @@
-FROM node:16-slim as buildstage
+FROM node:16.20.0-bullseye-slim as buildstage
 
 WORKDIR /usr/src/app
 
@@ -7,7 +7,7 @@ RUN npm install
 COPY --chown=node . .
 RUN npm run build
 
-FROM node:19-slim 
+FROM node:16.20.0-bullseye-slim
 
 ENV PORT=3000 
 USER node
