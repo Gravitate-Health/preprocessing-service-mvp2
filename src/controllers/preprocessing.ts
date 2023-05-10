@@ -12,7 +12,7 @@ const addSemmanticAnnotation = (leafletSectionList: any[]) => {
     //Preprocessing goes in here
     // ADD TEST PREPROCESS
     console.log("Adding <samplePreprocessTag> tag");
-    section['text']['div'] = `<samplePreprocessTag><samplePreprocessTag2>${section['text']['div']}</samplePreprocessTag></samplePreprocessTag2>`
+    section['text']['div'] = `<samplePreprocessTag><samplePreprocessTag3>${section['text']['div']}</samplePreprocessTag></samplePreprocessTag3>`
 
 
 
