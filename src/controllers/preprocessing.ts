@@ -2,7 +2,7 @@ import { Response, Request } from "express";
 import { Logger } from "../utils/Logger";
 
 const getLeaflet = (epi: any) => {
-  let leafletSectionList = epi['entry'][0]['resource']['section'][1]['section']
+  let leafletSectionList = epi['entry'][0]['resource']['section'][0]['section']
   return leafletSectionList
 }
 
@@ -12,7 +12,7 @@ const addSemmanticAnnotation = (leafletSectionList: any[]) => {
     //Preprocessing goes in here
     // ADD TEST PREPROCESS
     console.log("Adding <samplePreprocessTag> tag");
-    section['text']['div'] = `<samplePreprocessTag>${section['text']['div']}</samplePreprocessTag>`
+    section['text']['div'] = `<samplePreprocessTag><samplePreprocessTag2>${section['text']['div']}</samplePreprocessTag></samplePreprocessTag2>`
 
 
 
@@ -40,7 +40,7 @@ export const preprocess = async (req: Request, res: Response) => {
     res.status(500).send('Preprocessor error')
     return
   }
-  epi['entry'][0]['resource']['section'][1]['section'] = annotatedSectionList
+  epi['entry'][0]['resource']['section'][0]['section'] = annotatedSectionList
   console.log(`Returning ePI with Length: ${JSON.stringify(epi).length}`);
   res.status(200).send(epi);
   return
