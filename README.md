@@ -21,9 +21,7 @@
 ---
 ## Introduction
 
-This repository contains an example of a preprocesing service.
-
-This service does not need to be published to the internet, so no gateway config is needed to proxy any petition. This is an internal service.
+This repository contains an example of a preprocesing service. A preprocessing service reads the Package Leaflet of an ePI, and adds semmantic annotations to it.
 
 ---
 ## Hackaton Considerations
@@ -31,13 +29,13 @@ This repository serves as an skeleton for a preprocessor service. It is written 
 
 In this example, the preprocessing is done in the [src/controllers/preprocessing.ts](./src/controllers/preprocessing.ts) file, in the `addSemmanticAnnotation` function.
 
-The hackathon participants may write the preprocessor in the way that best suits for them. The only thing that is mandatory is that the preprocessor API complies with the [OpenApi Specification](./openapi.yaml) within this repository. Also, the service must listen for HTTP connections on port 3000.
+The hackathon participants may write the preprocessor in the way that best suits for them. Participants can use any programming language, framework or technology. The only thing that is mandatory is that the preprocessor serves an API that is compliant with the [OpenApi Specification](./openapi.yaml) within this repository. Also, the service must listen for HTTP connections on port 3000. Note that this service will not be accessible over the internet when deployed in the Gravitate Health infrastructure, and will be an internal service that is used via the Hackathon web interface.
 
 Participants must provide the image name of the preprocessor to the Hackathon organizers and deployment is automatized.
 
 Participants must fork this proyect into their personal github account. 
 
-The way the preprocessor is deployed in the infrascturcure is done with a Github action, which is included in the repository. The action can be found at [.github/workflows/docker-image.yml](./.github/workflows/docker-image.yml), and it builds a Docker image with the syntax `ghcr.io/GITHUB_USERNAME/REPOSITORY_NAME`, and then publishes it to ghcr.io (Github container Registry). The name of this image must be provided to the Hackaton organizers so they can deploy a service running the developed preprocessing service to be tested within the infrastructure. Participants are advised not to edit this Github Action, but if they wanted, they must tag the latest version of the image as `latest`.
+The way the preprocessor is deployed in the infrascturcure is done with a Github action, which is included in the repository. The action can be found at [.github/workflows/docker-image.yml](./.github/workflows/docker-image.yml), and it builds a Docker image with the syntax `ghcr.io/GITHUB_USERNAME/REPOSITORY_NAME`, tagging the latest version of the image as `latest`, and then publishes it to ghcr.io (Github container Registry). The name of this image must be provided to the Hackaton organizers so they can deploy a service running the developed preprocessing service to be tested within the infrastructure. Participants are advised not to edit this Github Action.
 
 Once the preprocessor is deployed to the infrastructure, the name of the preprocessor will be presented in the Hackathon frontend as `preprocessing-teamN`, being `N` the name of the team.
 
@@ -57,6 +55,8 @@ metadata:
   labels:
     eu.gravitate-health.fosps.preprocessing: "true"
 ```
+
+NOTE: This service does not need to be published to the internet, so no gateway config is needed to proxy any petition. This is an internal service.
 
 ---
 ## Usage
