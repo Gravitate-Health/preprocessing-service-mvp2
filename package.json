@@ -1,7 +1,7 @@
 {
-  "name": "preprocessing-service",
+  "name": "preprocessing-service-example",
   "version": "1.0.0",
-  "description": "Gravitate-Health Preprocessing Service Test",
+  "description": "Gravitate-Health Preprocessing Service Example",
   "main": "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Gravitate-Health/preprocessing-service-test.git"
+    "url": "git+https://github.com/Gravitate-Health/preprocessing-service-example.git"
   },
   "author": "Guillermo Mejías (gmejias97@gmail.com)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Gravitate-Health/preprocessing-service-test/issues"
+    "url": "https://github.com/Gravitate-Health/preprocessing-service-example/issues"
   },
-  "homepage": "https://github.com/Gravitate-Health/preprocessing-service-test#readme",
+  "homepage": "https://github.com/Gravitate-Health/preprocessing-service-example#readme",
   "devDependencies": {
     "@types/express": "^4.17.17",
     "@types/node": "^18.16.1",
