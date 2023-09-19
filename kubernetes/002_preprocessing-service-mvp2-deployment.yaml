@@ -12,18 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Service
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: preprocessing-service-example
-  labels:
-    name: preprocessing-service-example
-    eu.gravitate-health.fosps.preprocessing: "true"
+  name: preprocessing-service-mvp2
+
 spec:
+  replicas: 1
   selector:
-    app: preprocessing-service-example
-  ports:
-    - protocol: TCP
-      port: 3000
-      targetPort: 3000
-  type: ClusterIP
+    matchLabels:
+      app: preprocessing-service-mvp2
+  template:
+    metadata:
+      labels:
+        app: preprocessing-service-mvp2
+    spec:
+      containers:
+        - name: preprocessing-service-mvp2
+          image: gravitate-registry.cr.de-fra.ionos.com/preprocessing-service-mvp2:latest
+          imagePullPolicy: Always
+          env:
+            - name: ENVIRONMENT
+              value: "prod"
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+      restartPolicy: Always
+status: {}
