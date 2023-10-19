@@ -2,6 +2,7 @@ import { Response, Request } from "express";
 import { Logger } from "../utils/Logger";
 import axios, { all } from 'axios';
 
+let leafletLanguage: string
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 const snomedEndpointList = [
@@ -40,8 +41,8 @@ function annotationProcess(divString: string, code: object) {
 function recursiveTreeWalker(nodeList: any, code: any, document: any) {
     for (let node of nodeList) {
         if (node.childNodes.length == 1 && node.childNodes[0].nodeName == '#text') {
-            if (node.childNodes[0].textContent.includes(code["en"])) {
-                const span = document.createElement('span');
+            if (node.childNodes[0].textContent.includes(code[leafletLanguage])) {
+                const span = document.createElement('section');
                 span.className = code["ID"];
                 span.textContent = node.childNodes[0].textContent;
                 node.childNodes[0].textContent = '';
@@ -52,8 +53,8 @@ function recursiveTreeWalker(nodeList: any, code: any, document: any) {
         } else {
             recursiveTreeWalker(node.childNodes, code, document);
         }
-        if (node.textContent.includes(code["en"])) {
-            const span = document.createElement('span');
+        if (node.textContent.includes(code[leafletLanguage])) {
+            const span = document.createElement('section');
             span.className = code["ID"];
             span.textContent = node.childNodes[0].textContent;
             node.childNodes[0].textContent = '';
@@ -66,7 +67,7 @@ const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[]) =
     leafletSectionList.forEach((section) => {
         const divString = section['text']['div']
         snomedCodes.forEach((code) => {
-            if (divString.includes(code['en'])) {
+            if (divString.includes(code[leafletLanguage])) {
                 section['text']['div'] = annotationProcess(divString, code)
             }
         })
@@ -78,6 +79,7 @@ export const preprocess = async (req: Request, res: Response) => {
     let epi = req.body;
     console.log(`Received ePI with Length: ${JSON.stringify(epi).length}`);
     Logger.logInfo('preprocessing.ts', 'preprocess', `queried /preprocess function with epi ID: ${JSON.stringify(epi['id'])}`)
+    leafletLanguage = epi['entry'][0]['resource']['language']
     let leafletSectionList
     let snomedCodes: any[] = []
     try {
