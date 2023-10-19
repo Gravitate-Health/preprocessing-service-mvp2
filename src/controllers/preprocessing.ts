@@ -79,7 +79,16 @@ export const preprocess = async (req: Request, res: Response) => {
     let epi = req.body;
     console.log(`Received ePI with Length: ${JSON.stringify(epi).length}`);
     Logger.logInfo('preprocessing.ts', 'preprocess', `queried /preprocess function with epi ID: ${JSON.stringify(epi['id'])}`)
-    leafletLanguage = epi['entry'][0]['resource']['language']
+    switch(epi['entry'][0]['resource']['language'].toLowerCase()) {
+        case 'en':
+            leafletLanguage = 'en'
+            break
+        case 'es':
+            leafletLanguage = 'es'
+            break
+        default:
+            leafletLanguage = 'en'
+    }
     let leafletSectionList
     let snomedCodes: any[] = []
     try {
