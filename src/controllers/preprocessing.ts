@@ -10,7 +10,8 @@ const snomedEndpointList = [
     'diabetes',
     'medication-interaction',
     'vih',
-    'allergies'
+    'allergies',
+    'simplification'
 ]
 
 const getLeaflet = (epi: any) => {
@@ -19,7 +20,7 @@ const getLeaflet = (epi: any) => {
 }
 
 const getSnomedCodes = async (terminologyType: string) => {
-    const snomedCodes = await axios.get(`http://fosps.gravitatehealth.eu/terminologies/snomed/${terminologyType}/all`)
+    const snomedCodes = await axios.get(`http://gravitate-health.lst.tfo.upm.es/terminologies/snomed/${terminologyType}/all`)
         .then((response) => {
             return response.data
         })
@@ -34,15 +35,29 @@ function annotationProcess(divString: string, code: object) {
     let document = dom.window.document;
     let leaflet = document.querySelectorAll('div');
     recursiveTreeWalker(leaflet, code, document);
-
-    return document.documentElement.outerHTML;
+    let response = document.documentElement.outerHTML;
+    if (document.getElementsByTagName("html").length > 0) {
+        response = document.getElementsByTagName("html")[0].innerHTML;
+        console.log("Response: " + response);
+    }
+    if (document.getElementsByTagName("head").length > 0) {
+        document.getElementsByTagName("head")[0].remove();
+    }
+    if (document.getElementsByTagName("body").length > 0) {
+        response = document.getElementsByTagName("body")[0].innerHTML;
+        console.log("Response: " + response);
+    } else {
+        console.log("Response: " + document.documentElement.innerHTML);
+        response = document.documentElement.innerHTML;
+    }
+    return response;
 }
 
 function recursiveTreeWalker(nodeList: any, code: any, document: any) {
     for (let node of nodeList) {
         if (node.childNodes.length == 1 && node.childNodes[0].nodeName == '#text') {
             if (node.childNodes[0].textContent.includes(code[leafletLanguage])) {
-                const span = document.createElement('section');
+                const span = document.createElement('span');
                 span.className = code["ID"];
                 span.textContent = node.childNodes[0].textContent;
                 node.childNodes[0].textContent = '';
@@ -54,7 +69,7 @@ function recursiveTreeWalker(nodeList: any, code: any, document: any) {
             recursiveTreeWalker(node.childNodes, code, document);
         }
         if (node.textContent.includes(code[leafletLanguage])) {
-            const span = document.createElement('section');
+            const span = document.createElement('span');
             span.className = code["ID"];
             span.textContent = node.childNodes[0].textContent;
             node.childNodes[0].textContent = '';
