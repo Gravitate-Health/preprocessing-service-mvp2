@@ -33,47 +33,40 @@ const getSnomedCodes = async (terminologyType: string) => {
 function annotationProcess(divString: string, code: object) {
     let dom = new JSDOM(divString);
     let document = dom.window.document;
+    console.log("Divstring rendered: ", document.documentElement.outerHTML)
     let leaflet = document.querySelectorAll('div');
     recursiveTreeWalker(leaflet, code, document);
     let response = document.documentElement.outerHTML;
     if (document.getElementsByTagName("html").length > 0) {
         response = document.getElementsByTagName("html")[0].innerHTML;
-        console.log("Response: " + response);
     }
     if (document.getElementsByTagName("head").length > 0) {
         document.getElementsByTagName("head")[0].remove();
     }
     if (document.getElementsByTagName("body").length > 0) {
         response = document.getElementsByTagName("body")[0].innerHTML;
-        console.log("Response: " + response);
     } else {
         console.log("Response: " + document.documentElement.innerHTML);
         response = document.documentElement.innerHTML;
     }
+    console.log("Response: ", response)
     return response;
 }
 
 function recursiveTreeWalker(nodeList: any, code: any, document: any) {
-    for (let node of nodeList) {
-        if (node.childNodes.length == 1 && node.childNodes[0].nodeName == '#text') {
-            if (node.childNodes[0].textContent.includes(code[leafletLanguage])) {
+    for (let i = 0; i < nodeList.length; i++) {
+        if (nodeList.item(i).childNodes.length == 1 && nodeList.item(i).childNodes[0].nodeName == '#text') {
+            if (nodeList.item(i).childNodes[0].textContent.includes(code[leafletLanguage])) {
                 const span = document.createElement('span');
                 span.className = code["ID"];
-                span.textContent = node.childNodes[0].textContent;
-                node.childNodes[0].textContent = '';
-                node.appendChild(span);
+                span.textContent = nodeList.item(i).childNodes[0].textContent;
+                nodeList.item(i).childNodes[0].textContent = '';
+                nodeList.item(i).appendChild(span);
             } else {
-                recursiveTreeWalker(node.childNodes, code, document);
+                recursiveTreeWalker(nodeList.item(i).childNodes, code, document);
             }
         } else {
-            recursiveTreeWalker(node.childNodes, code, document);
-        }
-        if (node.textContent.includes(code[leafletLanguage])) {
-            const span = document.createElement('span');
-            span.className = code["ID"];
-            span.textContent = node.childNodes[0].textContent;
-            node.childNodes[0].textContent = '';
-            node.appendChild(span);
+            recursiveTreeWalker(nodeList.item(i).childNodes, code, document);
         }
     }
 }
@@ -81,6 +74,7 @@ function recursiveTreeWalker(nodeList: any, code: any, document: any) {
 const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[]) => {
     leafletSectionList.forEach((section) => {
         const divString = section['text']['div']
+        console.log("Now using this divstring: ", divString)
         snomedCodes.forEach((code) => {
             if (divString.includes(code[leafletLanguage])) {
                 section['text']['div'] = annotationProcess(divString, code)
