@@ -1,8 +1,9 @@
-import { Response, Request } from "express";
+import e, { Response, Request } from "express";
 import { Logger } from "../utils/Logger";
 import axios, { all } from 'axios';
 
 let leafletLanguage: string
+let codesFound: {ID: string, display: string }[] = []
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 const snomedEndpointList = [
@@ -77,11 +78,39 @@ const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[]) =
         console.log("Now using this divstring: ", divString)
         snomedCodes.forEach((code) => {
             if (divString.includes(code[leafletLanguage])) {
+                let codeObject = {
+                    "ID": code["ID"],
+                    "display": code[leafletLanguage]
+                }
+                codesFound.push(codeObject)
                 section['text']['div'] = annotationProcess(divString, code)
             }
         })
     })
     return leafletSectionList
+}
+
+const codeToExtension = (code: { ID: string, display: string }) => {
+    return [
+        {
+            "url": "elementClass",
+            "valueString": code.display
+        },
+        {
+            "url": "concept",
+            "valueCodeableReference": {
+                "concept": {
+                    "coding": [
+                        {
+                            "system": "http://snomed.info/sct",
+                            "code": code.ID,
+                            "display": code.display
+                        }
+                    ]
+                }
+            }
+        }
+    ]
 }
 
 export const preprocess = async (req: Request, res: Response) => {
@@ -122,12 +151,16 @@ export const preprocess = async (req: Request, res: Response) => {
         res.status(500).send('Preprocessor error')
         return
     }
-    epi['entry'][0]['resource']['section'][0]['section'] = annotatedSectionList
+    epi['entry'][0]['resource']['extension'] = [];
+    for (let code of codesFound) {
+        epi['entry'][0]['resource']['extension'].push(codeToExtension({ID: code.ID, display: code.display}));
+    }
+    epi['entry'][0]['resource']['section'][0]['section'] = annotatedSectionList;
     epi["entry"][0]["resource"]["category"][0]["coding"][0] = {
         "system": epi["entry"][0]["resource"]["category"][0]["coding"][0]["system"],
         "code": "P",
         "display": "Preprocessed"
-    }
+    };
     console.log(`Returning ePI with Length: ${JSON.stringify(epi).length}`);
     res.status(200).send(epi);
     return
