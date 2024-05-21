@@ -125,7 +125,8 @@ export const preprocess = async (req: Request, res: Response) => {
             leafletLanguage = 'es'
             break
         default:
-            leafletLanguage = 'en'
+            res.status(304).send(epi)
+            return
     }
     let leafletSectionList
     let snomedCodes: any[] = []
