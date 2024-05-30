@@ -117,6 +117,7 @@ export const preprocess = async (req: Request, res: Response) => {
     let epi = req.body;
     console.log(`Received ePI with Length: ${JSON.stringify(epi).length}`);
     Logger.logInfo('preprocessing.ts', 'preprocess', `queried /preprocess function with epi ID: ${JSON.stringify(epi['id'])}`)
+    console.log("Language: ", epi['entry'][0]['resource']['language'].toLowerCase())
     switch(epi['entry'][0]['resource']['language'].toLowerCase()) {
         case 'en':
             leafletLanguage = 'en'
@@ -157,11 +158,13 @@ export const preprocess = async (req: Request, res: Response) => {
         epi['entry'][0]['resource']['extension'].push(codeToExtension({ID: code.ID, display: code.display}));
     }
     epi['entry'][0]['resource']['section'][0]['section'] = annotatedSectionList;
-    epi["entry"][0]["resource"]["category"][0]["coding"][0] = {
-        "system": epi["entry"][0]["resource"]["category"][0]["coding"][0]["system"],
-        "code": "P",
-        "display": "Preprocessed"
-    };
+    if (epi["entry"][0]["resource"]["category"][0]["coding"][0]["code"] == "R") {
+        epi["entry"][0]["resource"]["category"][0]["coding"][0] = {
+            "system": epi["entry"][0]["resource"]["category"][0]["coding"][0]["system"],
+            "code": "P",
+            "display": "Preprocessed"
+        };
+    }
     console.log(`Returning ePI with Length: ${JSON.stringify(epi).length}`);
     res.status(200).send(epi);
     return
