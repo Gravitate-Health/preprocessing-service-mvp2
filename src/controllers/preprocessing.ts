@@ -2,17 +2,21 @@ import e, { Response, Request } from "express";
 import { Logger } from "../utils/Logger";
 import axios, { all } from 'axios';
 
-let leafletLanguage: string
-let codesFound: {ID: string, display: string }[] = []
+let descriptionLang: string
+let codesFound: {
+    system: string, 
+    ID: string,
+    display: string 
+}[] = []
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 const snomedEndpointList = [
     'pregnancy',
-    'diabetes',
-    'medication-interaction',
-    'vih',
-    'allergies',
-    'simplification'
+    // 'diabetes',
+    // 'medication-interaction',
+    // 'vih',
+    // 'allergies',
+    // 'simplification'
 ]
 
 const getLeaflet = (epi: any) => {
@@ -57,9 +61,16 @@ function annotationProcess(divString: string, code: object) {
 function recursiveTreeWalker(nodeList: any, code: any, document: any) {
     for (let i = 0; i < nodeList.length; i++) {
         if (nodeList.item(i).childNodes.length == 1 && nodeList.item(i).childNodes[0].nodeName == '#text') {
-            if (nodeList.item(i).childNodes[0].textContent.includes(code[leafletLanguage])) {
+            const nodeLC = nodeList.item(i).childNodes[0].textContent.toLowerCase()
+            console.log("Node in lowercase: ", nodeLC)
+            console.log("Code in lowercase: ", code[descriptionLang].toLowerCase())
+            console.log("Does this node contain the code? ", nodeLC.includes(code[descriptionLang].toLowerCase()))
+            if (nodeList.item(i).childNodes[0].textContent.toLowerCase().includes(code[descriptionLang].toLowerCase())) {
                 const span = document.createElement('span');
-                span.className = code["ID"];
+                span.className = code["code"];
+                if (nodeList.item(i).className  != "" && nodeList.item(i).className != null && nodeList.item(i).className != undefined) {
+                    span.className = nodeList.item(i).className + " " + code["code"];
+                }
                 span.textContent = nodeList.item(i).childNodes[0].textContent;
                 nodeList.item(i).childNodes[0].textContent = '';
                 nodeList.item(i).appendChild(span);
@@ -74,13 +85,18 @@ function recursiveTreeWalker(nodeList: any, code: any, document: any) {
 
 const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[]) => {
     leafletSectionList.forEach((section) => {
-        const divString = section['text']['div']
-        console.log("Now using this divstring: ", divString)
         snomedCodes.forEach((code) => {
-            if (divString.includes(code[leafletLanguage])) {
+            const divString: string = section['text']['div']
+            const divStringLC = divString.toLowerCase();
+            console.log("Now using this divstring: ", divString)
+            console.log("Now using this divstring in lowercase: ", divStringLC)
+            console.log("Description: ", code[descriptionLang]);
+            console.log("Does this code match the divstring? ", divStringLC.includes(code[descriptionLang].toLowerCase()))
+            if (divStringLC.includes(code[descriptionLang].toLowerCase())) {
                 let codeObject = {
-                    "ID": code["ID"],
-                    "display": code[leafletLanguage]
+                    "ID": code["code"],
+                    "display": code[descriptionLang],
+                    "system": code["codesystem"]
                 }
                 codesFound.push(codeObject)
                 section['text']['div'] = annotationProcess(divString, code)
@@ -90,7 +106,7 @@ const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[]) =
     return leafletSectionList
 }
 
-const codeToExtension = (code: { ID: string, display: string }) => {
+const codeToExtension = (code: { ID: string, display: string, system: string }) => {
     return [
         {
             "url": "elementClass",
@@ -102,7 +118,7 @@ const codeToExtension = (code: { ID: string, display: string }) => {
                 "concept": {
                     "coding": [
                         {
-                            "system": "http://snomed.info/sct",
+                            "system": code.system,
                             "code": code.ID,
                             "display": code.display
                         }
@@ -120,10 +136,10 @@ export const preprocess = async (req: Request, res: Response) => {
     console.log("Language: ", epi['entry'][0]['resource']['language'].toLowerCase())
     switch(epi['entry'][0]['resource']['language'].toLowerCase()) {
         case 'en':
-            leafletLanguage = 'en'
+            descriptionLang = 'descr_en'
             break
         case 'es':
-            leafletLanguage = 'es'
+            descriptionLang = 'descr_es'
             break
         default:
             res.status(304).send(epi)
@@ -155,7 +171,22 @@ export const preprocess = async (req: Request, res: Response) => {
     }
     epi['entry'][0]['resource']['extension'] = [];
     for (let code of codesFound) {
-        epi['entry'][0]['resource']['extension'].push(codeToExtension({ID: code.ID, display: code.display}));
+        let codeSystemUrl;
+        switch (code.system) {
+            case "snomed":
+                codeSystemUrl = "http://snomed.info/sct"
+                break
+            case "icpc-2":
+                codeSystemUrl = "placeholder"
+                break
+            case "gravitate":
+                codeSystemUrl = "https://www.gravitatehealth.eu/"
+                break
+            default:
+                codeSystemUrl = "placeholder"
+                break
+        }
+        epi['entry'][0]['resource']['extension'].push(codeToExtension({ID: code.ID, display: code.display, system: codeSystemUrl }));
     }
     epi['entry'][0]['resource']['section'][0]['section'] = annotatedSectionList;
     if (epi["entry"][0]["resource"]["category"][0]["coding"][0]["code"] == "R") {
