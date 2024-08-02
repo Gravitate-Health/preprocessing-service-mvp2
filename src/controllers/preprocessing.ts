@@ -7,6 +7,11 @@ let codesFound: {
     system: string, 
     ID: string,
     display: string 
+    synonym_of?: {
+        system: string,
+        ID: string,
+        display: string
+    }
 }[] = []
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
@@ -68,12 +73,18 @@ function recursiveTreeWalker(nodeList: any, code: any, document: any) {
             if (nodeList.item(i).childNodes[0].textContent.toLowerCase().includes(code[descriptionLang].toLowerCase())) {
                 const span = document.createElement('span');
                 span.className = code["code"];
-                if (nodeList.item(i).className  != "" && nodeList.item(i).className != null && nodeList.item(i).className != undefined) {
-                    span.className = nodeList.item(i).className + " " + code["code"];
+                if (code["synonym_of"] != undefined) {
+                    const synonym = code["synonym_of"];
+                    console.log("Added synonym  " + synonym["code"] + " to " + code["code"]);
+                    span.className = span.className + " " + synonym["code"];
                 }
+                if (nodeList.item(i).className != "" && nodeList.item(i).className != null && nodeList.item(i).className != undefined) {
+                    span.className = nodeList.item(i).className + " " + span.className;
+                }
+                nodeList.item(i).className = "";
                 span.textContent = nodeList.item(i).childNodes[0].textContent;
                 nodeList.item(i).childNodes[0].textContent = '';
-                nodeList.item(i).appendChild(span);
+                nodeList.item(i).parentNode.replaceChild(span, nodeList.item(i));
             } else {
                 recursiveTreeWalker(nodeList.item(i).childNodes, code, document);
             }
@@ -93,10 +104,24 @@ const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[]) =
             console.log("Description: ", code[descriptionLang]);
             console.log("Does this code match the divstring? ", divStringLC.includes(code[descriptionLang].toLowerCase()))
             if (divStringLC.includes(code[descriptionLang].toLowerCase())) {
-                let codeObject = {
-                    "ID": code["code"],
-                    "display": code[descriptionLang],
-                    "system": code["codesystem"]
+                let codeObject;
+                if (code['synonym_of'] != undefined) {
+                    codeObject = {
+                        "ID": code["code"],
+                        "display": code[descriptionLang],
+                        "system": code["codesystem"],
+                        "synonym_of": {
+                            "ID": code["synonym_of"]["code"],
+                            "display": code["synonym_of"][descriptionLang],
+                            "system": code["synonym_of"]["codesystem"]
+                        }
+                    }
+                } else {
+                    codeObject = {
+                        "ID": code["code"],
+                        "display": code[descriptionLang],
+                        "system": code["codesystem"]
+                    }
                 }
                 codesFound.push(codeObject)
                 section['text']['div'] = annotationProcess(divString, code)
@@ -170,6 +195,13 @@ export const preprocess = async (req: Request, res: Response) => {
         return
     }
     epi['entry'][0]['resource']['extension'] = [];
+    for (let code of codesFound) {
+        if (code.synonym_of != undefined) {
+            if (!codesFound.some((e) => e.ID == code.synonym_of?.ID)) {
+                codesFound.push(code.synonym_of)
+            }
+        }
+    }
     for (let code of codesFound) {
         let codeSystemUrl;
         switch (code.system) {
