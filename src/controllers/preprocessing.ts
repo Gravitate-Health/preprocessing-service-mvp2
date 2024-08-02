@@ -186,7 +186,16 @@ export const preprocess = async (req: Request, res: Response) => {
                 codeSystemUrl = "placeholder"
                 break
         }
-        epi['entry'][0]['resource']['extension'].push(codeToExtension({ID: code.ID, display: code.display, system: codeSystemUrl }));
+        const codeList: [] = epi['entry'][0]['resource']['extension']
+        if (!codeList.some((e: any) => { 
+            if (e['valueCodeableConcept'] == undefined) {
+                return false
+            } else {
+                return e['valueCodeableConcept']['concept']['coding'][0]['code'] == code.ID && e['valueCodeableConcept']['concept']['coding'][0]['display'] == code.display
+            }
+        })) {
+            epi['entry'][0]['resource']['extension'].push(codeToExtension({ID: code.ID, display: code.display, system: codeSystemUrl }));
+        }
     }
     epi['entry'][0]['resource']['section'][0]['section'] = annotatedSectionList;
     if (epi["entry"][0]["resource"]["category"][0]["coding"][0]["code"] == "R") {
