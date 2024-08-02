@@ -110,7 +110,7 @@ const codeToExtension = (code: { ID: string, display: string, system: string }) 
     return [
         {
             "url": "elementClass",
-            "valueString": code.display
+            "valueString": code.ID
         },
         {
             "url": "concept",
