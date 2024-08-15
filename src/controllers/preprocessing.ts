@@ -13,8 +13,10 @@ let codesFound: {
         display: string
     }
 }[] = []
+
 const jsdom = require("jsdom");
-const { JSDOM } = jsdom;
+let JSDOM;
+
 const snomedEndpointList = [
     'pregnancy',
     // 'diabetes',
@@ -40,7 +42,7 @@ const getSnomedCodes = async (terminologyType: string) => {
     return snomedCodes
 }
 
-function annotationProcess(divString: string, code: object) {
+function annotationProcess(divString: string, code: object, JSDOM: any) {
     let dom = new JSDOM(divString);
     let document = dom.window.document;
     console.log("Divstring rendered: ", document.documentElement.outerHTML)
@@ -94,7 +96,7 @@ function recursiveTreeWalker(nodeList: any, code: any, document: any) {
     }
 }
 
-const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[]) => {
+const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[], JSDOM: any) => {
     leafletSectionList.forEach((section) => {
         snomedCodes.forEach((code) => {
             const divString: string = section['text']['div']
@@ -124,7 +126,7 @@ const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[]) =
                     }
                 }
                 codesFound.push(codeObject)
-                section['text']['div'] = annotationProcess(divString, code)
+                section['text']['div'] = annotationProcess(divString, code, JSDOM)
             }
         })
     })
@@ -155,7 +157,9 @@ const codeToExtension = (code: { ID: string, display: string, system: string }) 
 }
 
 export const preprocess = async (req: Request, res: Response) => {
+    JSDOM = jsdom.JSDOM;
     let epi = req.body;
+    codesFound = []
     console.log(`Received ePI with Length: ${JSON.stringify(epi).length}`);
     Logger.logInfo('preprocessing.ts', 'preprocess', `queried /preprocess function with epi ID: ${JSON.stringify(epi['id'])}`)
     console.log("Language: ", epi['entry'][0]['resource']['language'].toLowerCase())
@@ -189,7 +193,7 @@ export const preprocess = async (req: Request, res: Response) => {
     }
     let annotatedSectionList
     try {
-        annotatedSectionList = addSemmanticAnnotation(leafletSectionList, snomedCodes)
+        annotatedSectionList = addSemmanticAnnotation(leafletSectionList, snomedCodes, JSDOM)
     } catch (error) {
         res.status(500).send('Preprocessor error')
         return
@@ -226,7 +230,11 @@ export const preprocess = async (req: Request, res: Response) => {
                 return e['valueCodeableConcept']['concept']['coding'][0]['code'] == code.ID && e['valueCodeableConcept']['concept']['coding'][0]['display'] == code.display
             }
         })) {
-            epi['entry'][0]['resource']['extension'].push(codeToExtension({ID: code.ID, display: code.display, system: codeSystemUrl }));
+            epi['entry'][0]['resource']['extension'].push(
+                {   
+                    "url": "https://hl7.eu/fhir/ig/gravitate-health/StructureDefinition/HtmlElementLink",
+                    "extension": codeToExtension({ID: code.ID, display: code.display, system: codeSystemUrl })
+                });
         }
     }
     epi['entry'][0]['resource']['section'][0]['section'] = annotatedSectionList;
