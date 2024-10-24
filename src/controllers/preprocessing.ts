@@ -170,6 +170,9 @@ export const preprocess = async (req: Request, res: Response) => {
         case 'es':
             descriptionLang = 'descr_es'
             break
+        case 'da':
+            descriptionLang = 'descr_da'
+            break
         default:
             res.status(304).send(epi)
             return
