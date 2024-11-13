@@ -100,6 +100,9 @@ const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[], J
     leafletSectionList.forEach((section) => {
         snomedCodes.forEach((code) => {
             const divString: string = section['text']['div']
+            if (section.section != undefined) {
+                addSemmanticAnnotation(section.section, snomedCodes, JSDOM)
+            }
             const divStringLC = divString.toLowerCase();
             console.log("Now using this divstring: ", divString)
             console.log("Now using this divstring in lowercase: ", divStringLC)
