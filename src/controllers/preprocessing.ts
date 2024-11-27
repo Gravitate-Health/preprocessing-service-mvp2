@@ -100,33 +100,38 @@ const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[], J
     leafletSectionList.forEach((section) => {
         snomedCodes.forEach((code) => {
             const divString: string = section['text']['div']
-            const divStringLC = divString.toLowerCase();
-            console.log("Now using this divstring: ", divString)
-            console.log("Now using this divstring in lowercase: ", divStringLC)
-            console.log("Description: ", code[descriptionLang]);
-            console.log("Does this code match the divstring? ", divStringLC.includes(code[descriptionLang].toLowerCase()))
-            if (divStringLC.includes(code[descriptionLang].toLowerCase())) {
-                let codeObject;
-                if (code['synonym_of'] != undefined) {
-                    codeObject = {
-                        "ID": code["code"],
-                        "display": code[descriptionLang],
-                        "system": code["codesystem"],
-                        "synonym_of": {
-                            "ID": code["synonym_of"]["code"],
-                            "display": code["synonym_of"][descriptionLang],
-                            "system": code["synonym_of"]["codesystem"]
+            if (section.section != undefined) {
+                addSemmanticAnnotation(section.section, snomedCodes, JSDOM)
+            }
+            if (code[descriptionLang] != undefined || code[descriptionLang] != null || code[descriptionLang] != "") {
+                const divStringLC = divString.toLowerCase();
+                console.log("Now using this divstring: ", divString)
+                console.log("Now using this divstring in lowercase: ", divStringLC)
+                console.log("Description: ", code[descriptionLang]);
+                console.log("Does this code match the divstring? ", divStringLC.includes(code[descriptionLang].toLowerCase()))
+                if (divStringLC.includes(code[descriptionLang].toLowerCase())) {
+                    let codeObject;
+                    if (code['synonym_of'] != undefined) {
+                        codeObject = {
+                            "ID": code["code"],
+                            "display": code[descriptionLang],
+                            "system": code["codesystem"],
+                            "synonym_of": {
+                                "ID": code["synonym_of"]["code"],
+                                "display": code["synonym_of"][descriptionLang],
+                                "system": code["synonym_of"]["codesystem"]
+                            }
+                        }
+                    } else {
+                        codeObject = {
+                            "ID": code["code"],
+                            "display": code[descriptionLang],
+                            "system": code["codesystem"]
                         }
                     }
-                } else {
-                    codeObject = {
-                        "ID": code["code"],
-                        "display": code[descriptionLang],
-                        "system": code["codesystem"]
-                    }
+                    codesFound.push(codeObject)
+                    section['text']['div'] = annotationProcess(divString, code, JSDOM)
                 }
-                codesFound.push(codeObject)
-                section['text']['div'] = annotationProcess(divString, code, JSDOM)
             }
         })
     })
@@ -163,17 +168,9 @@ export const preprocess = async (req: Request, res: Response) => {
     console.log(`Received ePI with Length: ${JSON.stringify(epi).length}`);
     Logger.logInfo('preprocessing.ts', 'preprocess', `queried /preprocess function with epi ID: ${JSON.stringify(epi['id'])}`)
     console.log("Language: ", epi['entry'][0]['resource']['language'].toLowerCase())
-    switch(epi['entry'][0]['resource']['language'].toLowerCase()) {
-        case 'en':
-            descriptionLang = 'descr_en'
-            break
-        case 'es':
-            descriptionLang = 'descr_es'
-            break
-        default:
-            res.status(304).send(epi)
-            return
-    }
+
+    descriptionLang = `descr_${epi['entry'][0]['resource']['language'].toLowerCase()}`
+
     let leafletSectionList
     let snomedCodes: any[] = []
     try {
@@ -185,6 +182,7 @@ export const preprocess = async (req: Request, res: Response) => {
         res.status(500).send('Failed getting Snomed Codes')
         return
     }
+
     try {
         leafletSectionList = getLeaflet(epi)
     } catch (error) {
