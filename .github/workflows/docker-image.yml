@@ -1,48 +1,12 @@
-name: Deploy Docker Image
+name: CI CD
 
 on:
   push:
-    branches:
-      - master
-      - main
-    tags:
-      - "v*"
-  pull_request:
-    branches:
-      - master
-      - main
 
 jobs:
-  deploy-docker-hello-world:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ghcr.io/${{ github.repository }}
-          flavor: latest=true
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-
-      - name: Login to image repository
-        if: github.ref_type == 'tag'
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: Dockerfile
-          push: ${{ github.ref_type == 'tag' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+    main-GH-workflow:
+      uses: Gravitate-Health/reusable-workflows/.github/workflows/main.yml@main
+      secrets: 
+        REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+        REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+        KUBECONFIG_DEV: ${{ secrets.KUBECONFIG_DEV }}
