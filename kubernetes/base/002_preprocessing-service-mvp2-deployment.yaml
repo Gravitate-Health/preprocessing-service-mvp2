@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: preprocessing-service-mvp2
-          image: gravitate-registry.cr.de-fra.ionos.com/preprocessing-service-mvp2:latest
+          image: gravitate-registry.cr.de-fra.ionos.com/preprocessing-service-mvp2:v0.3.0
           imagePullPolicy: Always
           env:
             - name: ENVIRONMENT
