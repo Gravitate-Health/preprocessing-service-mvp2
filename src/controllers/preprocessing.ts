@@ -18,12 +18,7 @@ const jsdom = require("jsdom");
 let JSDOM;
 
 const snomedEndpointList = [
-    'pregnancy',
-    // 'diabetes',
-    // 'medication-interaction',
-    // 'vih',
-    // 'allergies',
-    // 'simplification'
+    'codes'
 ]
 
 const getLeaflet = (epi: any) => {
@@ -32,7 +27,7 @@ const getLeaflet = (epi: any) => {
 }
 
 const getSnomedCodes = async (terminologyType: string) => {
-    const snomedCodes = await axios.get(`http://gravitate-health.lst.tfo.upm.es/terminologies/snomed/${terminologyType}/all`)
+    const snomedCodes = await axios.get(`http://${process.env.SERVER_URL}/terminologies/${terminologyType}`)
         .then((response) => {
             return response.data
         })
