@@ -7,7 +7,7 @@ let codesFound: {
     system: string, 
     ID: string,
     display: string 
-    synonym_of?: {
+    synonyms?: {
         system: string,
         ID: string,
         display: string
@@ -27,7 +27,7 @@ const getLeaflet = (epi: any) => {
 }
 
 const getSnomedCodes = async (terminologyType: string) => {
-    const snomedCodes = await axios.get(`http://${process.env.SERVER_URL}/terminologies/${terminologyType}`)
+    const snomedCodes = await axios.get(`http://${process.env.SERVER_URL}/terminologies/${terminologyType}/all`)
         .then((response) => {
             return response.data
         })
@@ -70,8 +70,8 @@ function recursiveTreeWalker(nodeList: any, code: any, document: any) {
             if (nodeList.item(i).childNodes[0].textContent.toLowerCase().includes(code[descriptionLang].toLowerCase())) {
                 const span = document.createElement('span');
                 span.className = code["code"];
-                if (code["synonym_of"] != undefined) {
-                    const synonym = code["synonym_of"];
+                if (code["synonyms"] != undefined) {
+                    const synonym = code["synonyms"];
                     console.log("Added synonym  " + synonym["code"] + " to " + code["code"]);
                     span.className = span.className + " " + synonym["code"];
                 }
@@ -106,15 +106,15 @@ const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[], J
                 console.log("Does this code match the divstring? ", divStringLC.includes(code[descriptionLang].toLowerCase()))
                 if (divStringLC.includes(code[descriptionLang].toLowerCase())) {
                     let codeObject;
-                    if (code['synonym_of'] != undefined) {
+                    if (code['synonyms'] != undefined) {
                         codeObject = {
                             "ID": code["code"],
                             "display": code[descriptionLang],
                             "system": code["codesystem"],
-                            "synonym_of": {
-                                "ID": code["synonym_of"]["code"],
-                                "display": code["synonym_of"][descriptionLang],
-                                "system": code["synonym_of"]["codesystem"]
+                            "synonyms": {
+                                "ID": code["synonyms"]["code"],
+                                "display": code["synonyms"][descriptionLang],
+                                "system": code["synonyms"]["codesystem"]
                             }
                         }
                     } else {
@@ -193,9 +193,9 @@ export const preprocess = async (req: Request, res: Response) => {
     }
     epi['entry'][0]['resource']['extension'] = [];
     for (let code of codesFound) {
-        if (code.synonym_of != undefined) {
-            if (!codesFound.some((e) => e.ID == code.synonym_of?.ID)) {
-                codesFound.push(code.synonym_of)
+        if (code.synonyms != undefined) {
+            if (!codesFound.some((e) => e.ID == code.synonyms?.ID)) {
+                codesFound.push(code.synonyms)
             }
         }
     }
