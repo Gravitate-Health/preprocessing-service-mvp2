@@ -108,20 +108,20 @@ const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[], J
                     let codeObject;
                     if (code['synonyms'] != undefined) {
                         codeObject = {
-                            "ID": code["code"],
-                            "display": code[descriptionLang],
-                            "system": code["codesystem"],
+                            "ID": code["code"].trim(),
+                            "display": code[descriptionLang].trim(),
+                            "system": code["codesystem"].trim(),
                             "synonyms": {
-                                "ID": code["synonyms"]["code"],
-                                "display": code["synonyms"][descriptionLang],
-                                "system": code["synonyms"]["codesystem"]
+                                "ID": code["synonyms"]["code"].trim(),
+                                "display": code["synonyms"][descriptionLang].trim(),
+                                "system": code["synonyms"]["codesystem"].trim()
                             }
                         }
                     } else {
                         codeObject = {
                             "ID": code["code"],
-                            "display": code[descriptionLang],
-                            "system": code["codesystem"]
+                            "display": code[descriptionLang].trim(),
+                            "system": code["codesystem"].trim()
                         }
                     }
                     codesFound.push(codeObject)
@@ -137,7 +137,7 @@ const codeToExtension = (code: { ID: string, display: string, system: string }) 
     return [
         {
             "url": "elementClass",
-            "valueString": code.ID
+            "valueString": code.ID.trim()
         },
         {
             "url": "concept",
@@ -145,9 +145,9 @@ const codeToExtension = (code: { ID: string, display: string, system: string }) 
                 "concept": {
                     "coding": [
                         {
-                            "system": code.system,
-                            "code": code.ID,
-                            "display": code.display
+                            "system": code.system.trim(),
+                            "code": code.ID.trim(),
+                            "display": code.display.trim()
                         }
                     ]
                 }
@@ -212,7 +212,7 @@ export const preprocess = async (req: Request, res: Response) => {
                 codeSystemUrl = "https://www.gravitatehealth.eu/"
                 break
             default:
-                codeSystemUrl = "placeholder"
+                codeSystemUrl = code.system
                 break
         }
         const codeList: [] = epi['entry'][0]['resource']['extension']
