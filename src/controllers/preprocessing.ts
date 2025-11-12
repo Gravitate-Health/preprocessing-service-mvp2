@@ -27,7 +27,7 @@ const getLeaflet = (epi: any) => {
 }
 
 const getSnomedCodes = async (terminologyType: string) => {
-    const snomedCodes = await axios.get(`http://${process.env.SERVER_URL}/terminologies/${terminologyType}/all`)
+    const snomedCodes = await axios.get(`${process.env.TERM_SERVER_URL}/${terminologyType}/all`)
         .then((response) => {
             return response.data
         })

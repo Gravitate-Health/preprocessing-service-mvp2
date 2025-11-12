@@ -34,8 +34,8 @@ spec:
         env:
         - name: ENVIRONMENT
           value: "prod"
-        - name: SERVER_URL
-          value: "fosps.gravitatehealth.eu"
+        - name: TERM_SERVER_URL
+          value: "http://fosps.gravitatehealth.eu/terminologies"
         ports:
         - containerPort: 3000
           protocol: TCP

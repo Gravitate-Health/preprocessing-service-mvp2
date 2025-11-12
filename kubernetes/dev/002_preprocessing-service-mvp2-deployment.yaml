@@ -34,8 +34,8 @@ spec:
         env:
         - name: ENVIRONMENT
           value: "prod"
-        - name: SERVER_URL
-          value: "gravitate-health.lst.tfo.upm.es"
+        - name: TERM_SERVER_URL
+          value: "http://gravitate-health.lst.tfo.upm.es/terminologies"
         ports:
         - containerPort: 3000
           protocol: TCP
