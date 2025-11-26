@@ -21,7 +21,7 @@
   "homepage": "https://github.com/Gravitate-Health/preprocessing-service-example#readme",
   "devDependencies": {
     "@types/express": "^4.17.17",
-    "@types/node": "^18.16.1",
+    "@types/node": "^18.19.130",
     "eslint": "^8.39.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",

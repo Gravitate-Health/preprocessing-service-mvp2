@@ -32,7 +32,7 @@ const getSnomedCodes = async (terminologyType: string) => {
             return response.data
         })
         .catch((error) => {
-            console.log(error)
+            Logger.logError('preprocessing.ts', 'getSnomedCodes', () => error)
         })
     return snomedCodes
 }
@@ -40,7 +40,7 @@ const getSnomedCodes = async (terminologyType: string) => {
 function annotationProcess(divString: string, code: object, JSDOM: any) {
     let dom = new JSDOM(divString);
     let document = dom.window.document;
-    console.log("Divstring rendered: ", document.documentElement.outerHTML)
+    Logger.logDebug('preprocessing.ts', 'annotationProcess', () => `Divstring rendered: ${document.documentElement.outerHTML}`)
     let leaflet = document.querySelectorAll('div');
     recursiveTreeWalker(leaflet, code, document);
     let response = document.documentElement.outerHTML;
@@ -53,10 +53,10 @@ function annotationProcess(divString: string, code: object, JSDOM: any) {
     if (document.getElementsByTagName("body").length > 0) {
         response = document.getElementsByTagName("body")[0].innerHTML;
     } else {
-        console.log("Response: " + document.documentElement.innerHTML);
+        Logger.logDebug('preprocessing.ts', 'annotationProcess', () => `Response: ${document.documentElement.innerHTML}`)
         response = document.documentElement.innerHTML;
     }
-    console.log("Response: ", response)
+    Logger.logDebug('preprocessing.ts', 'annotationProcess', () => `Response: ${response}`)
     return response;
 }
 
@@ -64,15 +64,15 @@ function recursiveTreeWalker(nodeList: any, code: any, document: any) {
     for (let i = 0; i < nodeList.length; i++) {
         if (nodeList.item(i).childNodes.length == 1 && nodeList.item(i).childNodes[0].nodeName == '#text') {
             const nodeLC = nodeList.item(i).childNodes[0].textContent.toLowerCase()
-            console.log("Node in lowercase: ", nodeLC)
-            console.log("Code in lowercase: ", code[descriptionLang].toLowerCase())
-            console.log("Does this node contain the code? ", nodeLC.includes(code[descriptionLang].toLowerCase()))
+            Logger.logDebug('preprocessing.ts', 'recursiveTreeWalker', () => `Node in lowercase: ${nodeLC}`)
+            Logger.logDebug('preprocessing.ts', 'recursiveTreeWalker', () => `Code in lowercase: ${code[descriptionLang].toLowerCase()}`)
+            Logger.logDebug('preprocessing.ts', 'recursiveTreeWalker', () => `Does this node contain the code? ${nodeLC.includes(code[descriptionLang].toLowerCase())}`)
             if (nodeList.item(i).childNodes[0].textContent.toLowerCase().includes(code[descriptionLang].toLowerCase())) {
                 const span = document.createElement('span');
                 span.className = code["code"];
                 if (code["synonyms"] != undefined) {
                     const synonym = code["synonyms"];
-                    console.log("Added synonym  " + synonym["code"] + " to " + code["code"]);
+                    Logger.logDebug('preprocessing.ts', 'recursiveTreeWalker', () => `Added synonym ${synonym["code"]} to ${code["code"]}`)
                     span.className = span.className + " " + synonym["code"];
                 }
                 if (nodeList.item(i).className != "" && nodeList.item(i).className != null && nodeList.item(i).className != undefined) {
@@ -98,12 +98,12 @@ const addSemmanticAnnotation = (leafletSectionList: any[], snomedCodes: any[], J
             if (section.section != undefined) {
                 addSemmanticAnnotation(section.section, snomedCodes, JSDOM)
             }
-            if (code[descriptionLang] != undefined || code[descriptionLang] != null || code[descriptionLang] != "") {
+                if (code[descriptionLang] != undefined || code[descriptionLang] != null || code[descriptionLang] != "") {
                 const divStringLC = divString.toLowerCase();
-                console.log("Now using this divstring: ", divString)
-                console.log("Now using this divstring in lowercase: ", divStringLC)
-                console.log("Description: ", code[descriptionLang]);
-                console.log("Does this code match the divstring? ", divStringLC.includes(code[descriptionLang].toLowerCase()))
+                Logger.logDebug('preprocessing.ts', 'addSemmanticAnnotation', () => `Now using this divstring: ${divString}`)
+                Logger.logDebug('preprocessing.ts', 'addSemmanticAnnotation', () => `Now using this divstring in lowercase: ${divStringLC}`)
+                Logger.logDebug('preprocessing.ts', 'addSemmanticAnnotation', () => `Description: ${code[descriptionLang]}`)
+                Logger.logDebug('preprocessing.ts', 'addSemmanticAnnotation', () => `Does this code match the divstring? ${divStringLC.includes(code[descriptionLang].toLowerCase())}`)
                 if (divStringLC.includes(code[descriptionLang].toLowerCase())) {
                     let codeObject;
                     if (code['synonyms'] != undefined) {
@@ -160,9 +160,9 @@ export const preprocess = async (req: Request, res: Response) => {
     JSDOM = jsdom.JSDOM;
     let epi = req.body;
     codesFound = []
-    console.log(`Received ePI with Length: ${JSON.stringify(epi).length}`);
+    Logger.logInfo('preprocessing.ts', 'preprocess', () => `Received ePI with Length: ${JSON.stringify(epi).length}`)
     Logger.logInfo('preprocessing.ts', 'preprocess', `queried /preprocess function with epi ID: ${JSON.stringify(epi['id'])}`)
-    console.log("Language: ", epi['entry'][0]['resource']['language'].toLowerCase())
+    Logger.logDebug('preprocessing.ts', 'preprocess', () => `Language: ${epi['entry'][0]['resource']['language'].toLowerCase()}`)
 
     descriptionLang = `descr_${epi['entry'][0]['resource']['language'].toLowerCase()}`
 
@@ -238,7 +238,7 @@ export const preprocess = async (req: Request, res: Response) => {
             "display": "Preprocessed"
         };
     }
-    console.log(`Returning ePI with Length: ${JSON.stringify(epi).length}`);
+    Logger.logInfo('preprocessing.ts', 'preprocess', () => `Returning ePI with Length: ${JSON.stringify(epi).length}`);
     res.status(200).send(epi);
     return
 };

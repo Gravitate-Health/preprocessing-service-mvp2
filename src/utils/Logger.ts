@@ -1,57 +1,107 @@
-export abstract class Logger {
-    //soruce http://www.beefycode.com/post/Log4Net-Tutorial-pt-1-Getting-Started.aspx
-    
-    public static log(file:string,log_level:string, task: string, message: any) {
-        console.log(`${new Date().toISOString()} - ${log_level} - ${file} - ${task} - ${message}`)
+import * as util from 'util';
+
+export class Logger {
+    // Numeric levels: lower = more verbose
+    private static readonly LEVELS: Record<string, number> = {
+        DEBUG: 10,
+        INFO: 20,
+        WARN: 30,
+        ERROR: 40,
+        FATAL: 50,
+        OFF: 100
+    };
+
+    private static currentLevel: number = Logger.parseLevel(process.env.LOG_LEVEL || 'INFO');
+
+    // Allow setting level at runtime
+    public static setLevel(levelName: string) {
+        Logger.currentLevel = Logger.parseLevel(levelName);
     }
 
-    /**
-     * Statements that describe non-fatal errors in the application; this level is used quite often for logging handled exceptions
-     * @param {string} task Place from the log is displayes. Can be a function name or the full path of the file who contain the code 
-     * @param {string} message The message to display 
-     */
-    public static logError(file:string,task: string, message: any) {
-        Logger.log(file,"ERROR",task,message)
-        // console.log(`${new Date().toISOString()} - ${user} - ERROR - ${file} - ${task} - ${message}`)
+    public static getLevel(): string {
+        for (const k of Object.keys(Logger.LEVELS)) {
+            if (Logger.LEVELS[k] === Logger.currentLevel) return k;
+        }
+        return 'CUSTOM';
     }
 
-    /**
-     * Fine-grained statements concerning program state, typically used for debugging 
-     * @param {string} task Place from the log is displayes. Can be a function name or the full path of the file who contain the code 
-     * @param {string} message The message to display 
-     */
-    public static logDebug(file:string,  task: string, message: any) {
-        Logger.log(file,"DEBUG",task,message)
-        // console.log(`${new Date().toISOString()} - ${user} - DEBUG - ${file} - ${task} - ${message}`)
+    private static parseLevel(levelName?: string): number {
+        if (!levelName) return Logger.LEVELS.INFO;
+        const key = levelName.toUpperCase();
+        return Logger.LEVELS[key] ?? Logger.LEVELS.INFO;
     }
 
-    /**
-     * Statements that describe potentially harmful events or states in the program 
-     * @param {string} task Place from the log is displayes. Can be a function name or the full path of the file who contain the code 
-     * @param {string} message The message to display 
-     */
-    public static logWarn(file:string, task: string, message: any) {
-        Logger.log(file,"WARN",task,message)
-        // console.log(`${new Date().toISOString()} - ${user} - WARN - ${file} - ${task} - ${message}`)
-    }
-    
-    /**
-     * Statements representing the most severe of error conditions, assumedly resulting in program termination.
-     * @param {string} task Place from the log is displayes. Can be a function name or the full path of the file who contain the code 
-     * @param {string} message The message to display 
-     */
-    public static logFatal(file:string,  task: string, message: any) {
-        Logger.log(file,"FATAL",task,message)
-        // console.log(`${new Date().toISOString()} - ${user} - FATAL - ${file} - ${task} - ${message}`)
+    private static isEnabled(levelName: string): boolean {
+        const key = (levelName || '').toUpperCase();
+        const val = Logger.LEVELS[key];
+        if (val === undefined) return true; // unknown levels allowed
+        return val >= Logger.currentLevel;
     }
 
-    /**
-     * Informational statements concerning program state, representing program events or behavior tracking; 
-     * @param {string} task Place from the log is displayes. Can be a function name or the full path of the file who contain the code 
-     * @param {string} message The message to display 
-     */
-    public static logInfo(file:string, task: string, message: string) {
-        Logger.log(file,"INFO",task,message)
-        // console.log(`${new Date().toISOString()} - ${user} - INFO - ${file} - ${task} - ${message}`)
+    private static safeString(val: any): string {
+        if (val === null || val === undefined) return String(val);
+        if (typeof val === 'string') return val;
+        try {
+            return util.inspect(val, { depth: 2, colors: false });
+        } catch (e) {
+            try { return JSON.stringify(val); } catch (_) { return String(val); }
+        }
+    }
+
+    private static formatMessage(message: any): string {
+        if (typeof message === 'function') {
+            try {
+                return Logger.safeString((message as Function)());
+            } catch (e) {
+                return `<<log message function threw: ${e}>>`;
+            }
+        }
+        return Logger.safeString(message);
+    }
+
+    private static write(levelName: string, file: string, task: string, message: any) {
+        if (!Logger.isEnabled(levelName)) return;
+        const timestamp = new Date().toISOString();
+        const body = Logger.formatMessage(message);
+        const out = `${timestamp} - ${levelName.toUpperCase()} - ${file} - ${task} - ${body}`;
+        switch (levelName.toUpperCase()) {
+            case 'DEBUG':
+                console.debug ? console.debug(out) : console.log(out);
+                break;
+            case 'INFO':
+                console.info ? console.info(out) : console.log(out);
+                break;
+            case 'WARN':
+                console.warn ? console.warn(out) : console.log(out);
+                break;
+            default:
+                console.error ? console.error(out) : console.log(out);
+                break;
+        }
+    }
+
+    // Backwards-compatible generic log
+    public static log(file: string, log_level: string, task: string, message: any) {
+        Logger.write(log_level, file, task, message);
+    }
+
+    public static logError(file: string, task: string, message: any | (() => any)) {
+        Logger.write('ERROR', file, task, message);
+    }
+
+    public static logDebug(file: string, task: string, message: any | (() => any)) {
+        Logger.write('DEBUG', file, task, message);
+    }
+
+    public static logWarn(file: string, task: string, message: any | (() => any)) {
+        Logger.write('WARN', file, task, message);
+    }
+
+    public static logFatal(file: string, task: string, message: any | (() => any)) {
+        Logger.write('FATAL', file, task, message);
+    }
+
+    public static logInfo(file: string, task: string, message: any | (() => any)) {
+        Logger.write('INFO', file, task, message);
     }
 }
